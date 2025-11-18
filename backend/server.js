@@ -43,8 +43,7 @@ cron.schedule('0 */6 * * *', async () => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 VinylDrop API running on port ${PORT}`);
   console.log(`   Health check: http://localhost:${PORT}/health`);
   console.log(`   API: http://localhost:${PORT}/api/releases`);
