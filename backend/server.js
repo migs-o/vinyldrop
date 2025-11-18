@@ -3,6 +3,9 @@ const cors = require('cors');
 const cron = require('node-cron');
 require('dotenv').config();
 
+console.log('🔍 DEBUG - PORT from env:', process.env.PORT); // ADD THIS LINE
+console.log('🔍 DEBUG - All env vars:', Object.keys(process.env)); // AND THIS
+
 const releasesRouter = require('./routes/releases');
 const RedditScraper = require('./scrapers/reddit');
 
