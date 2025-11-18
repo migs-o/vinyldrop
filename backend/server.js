@@ -7,7 +7,6 @@ const releasesRouter = require('./routes/releases');
 const RedditScraper = require('./scrapers/reddit');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -42,6 +41,10 @@ cron.schedule('0 */6 * * *', async () => {
     console.error('Scheduled scrape failed:', error);
   }
 });
+
+// Start server
+const PORT = process.env.PORT || 3001;
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 VinylDrop API running on port ${PORT}`);
