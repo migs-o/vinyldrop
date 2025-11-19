@@ -9,10 +9,18 @@ class RedditVinylScraper {
   async scrapeAndStore(limit = 100) {
     try {
       console.log('🎵 Starting Reddit scraper...');
-      
+
       const url = `https://www.reddit.com/r/${this.subreddit}/new.json?limit=${limit}`;
       const response = await axios.get(url, {
-        headers: { 'User-Agent': 'VinylDrop/1.0.0' }
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        }
       });
 
       const posts = response.data.data.children;
@@ -74,22 +82,22 @@ class RedditVinylScraper {
       // Remove common prefixes
       .replace(/^\[?\s*(pre-?order|preorder|new release|restock|reissue|restocked?|available now)\s*:?\s*\]?\s*/gi, '')
       .replace(/^(pre\s*-?\s*order\s*:?\s*)/gi, '')
-      
+
       // Remove variant descriptions that confuse parsing
       .replace(/\s*\(signed\)/gi, '')
       .replace(/\s*\(autographed?\)/gi, '')
       .replace(/\s*signed\s+jacket/gi, '')
       .replace(/\s*w\/\s*signed\s+/gi, ' ')
-      
+
       // Remove store-specific notes
       .replace(/\s*\(target exclusive\)/gi, '')
       .replace(/\s*\(uo exclusive\)/gi, '')
       .replace(/\s*\(indie exclusive\)/gi, '')
       .replace(/\s*\(walmart exclusive\)/gi, '')
-      
+
       // Remove "Vinyl" at the end (redundant)
       .replace(/\s+vinyl\s*$/gi, '')
-      
+
       .trim();
 
     // Step 2: Extract and remove format info from brackets
@@ -135,7 +143,7 @@ class RedditVinylScraper {
     // Step 6: Extract artist and album
     // Pattern 1: "Artist - Album"
     const dashMatch = cleaned.match(/^([^-]+?)\s*-\s*(.+?)$/);
-    
+
     if (dashMatch) {
       artist = this.cleanArtistName(dashMatch[1]);
       album = this.cleanAlbumName(dashMatch[2]);
@@ -143,7 +151,7 @@ class RedditVinylScraper {
       // Pattern 2: No dash found, might be just an album or unclear
       // Try to detect if first part looks like an artist name
       const words = cleaned.split(/\s+/);
-      
+
       if (words.length >= 3) {
         // Assume first 1-2 words are artist
         artist = words.slice(0, 2).join(' ');
@@ -152,7 +160,7 @@ class RedditVinylScraper {
         // Give up, use whole thing as album
         album = cleaned;
       }
-      
+
       artist = this.cleanArtistName(artist);
       album = this.cleanAlbumName(album);
     }
@@ -160,7 +168,7 @@ class RedditVinylScraper {
     // Step 7: Extract genres from keywords
     const genreKeywords = {
       'indie': 'Indie',
-      'rock': 'Rock', 
+      'rock': 'Rock',
       'metal': 'Metal',
       'electronic': 'Electronic',
       'jazz': 'Jazz',
@@ -191,7 +199,7 @@ class RedditVinylScraper {
   // Helper: Check if string is a format
   isFormat(str) {
     const formats = [
-      'vinyl', 'lp', 'ep', '7"', '10"', '12"', 
+      'vinyl', 'lp', 'ep', '7"', '10"', '12"',
       'single', 'double lp', '2lp', '2xlp', '3lp',
       'picture disc', 'colored vinyl', 'clear vinyl'
     ];
@@ -202,7 +210,7 @@ class RedditVinylScraper {
   // Helper: Check if parenthetical content is a format descriptor
   isFormatDescriptor(str) {
     const descriptors = [
-      'colored', 'clear', 'transparent', 'opaque', 
+      'colored', 'clear', 'transparent', 'opaque',
       'splatter', 'marble', 'swirl', 'smoke',
       'red vinyl', 'blue vinyl', 'green vinyl', 'yellow vinyl',
       'white vinyl', 'black vinyl', 'pink vinyl', 'purple vinyl',
@@ -234,15 +242,15 @@ class RedditVinylScraper {
   }
 
   isPurchaseUrl(url) {
-    const domains = ['bandcamp.com', 'amazon.com', 'roughtrade.com', 'discogs.com', 
-                     'merchbar.com', 'turntablelab.com', 'urbanoutfitters.com', 'target.com'];
+    const domains = ['bandcamp.com', 'amazon.com', 'roughtrade.com', 'discogs.com',
+      'merchbar.com', 'turntablelab.com', 'urbanoutfitters.com', 'target.com'];
     return domains.some(d => url.includes(d));
   }
 
   extractImageUrl(post) {
     // Filter out Reddit's placeholder values
     const invalidThumbs = ['self', 'default', 'nsfw', 'spoiler', 'image', ''];
-    
+
     // First, try preview images (these are usually best quality)
     if (post.preview && post.preview.images && post.preview.images[0]) {
       const previewUrl = post.preview.images[0].source.url.replace(/&amp;/g, '&');
@@ -251,14 +259,14 @@ class RedditVinylScraper {
         return previewUrl;
       }
     }
-    
+
     // Fallback to thumbnail if it's valid
-    if (post.thumbnail && 
-        post.thumbnail.startsWith('http') && 
-        !invalidThumbs.includes(post.thumbnail)) {
+    if (post.thumbnail &&
+      post.thumbnail.startsWith('http') &&
+      !invalidThumbs.includes(post.thumbnail)) {
       return post.thumbnail;
     }
-    
+
     // No valid image found
     return null;
   }
