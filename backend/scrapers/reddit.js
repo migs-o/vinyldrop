@@ -36,6 +36,13 @@ class RedditVinylScraper {
       totalUpdated += vgmResults.updated;
       totalProcessed += vgmResults.total;
 
+      // Scrape r/vinyldeals - 100 posts, all posts
+      console.log('💰 Scraping r/vinyldeals (100 posts)...');
+      const dealsResults = await this.scrapeSubreddit('vinyldeals', 100, null);
+      totalInserted += dealsResults.inserted;
+      totalUpdated += dealsResults.updated;
+      totalProcessed += dealsResults.total;
+
       console.log(`✅ Scraping complete: ${totalInserted} new, ${totalUpdated} updated, ${totalProcessed} total`);
       return { inserted: totalInserted, updated: totalUpdated, total: totalProcessed };
 
@@ -124,8 +131,25 @@ class RedditVinylScraper {
     let price = null;
     let genres = [];
 
+    // Step 0: Remove store names in brackets (common in deals subreddit)
+    // Common store names that appear in brackets like [Amazon], [Bandcamp], etc.
+    const storeNames = [
+      'amazon', 'bandcamp', 'ebay', 'discogs', 'rough trade', 'roughtrade',
+      'urban outfitters', 'target', 'walmart', 'best buy', 'turntable lab',
+      'merchbar', 'bull moose', 'newbury comics', 'amoeba', 'record store',
+      'vinyl me please', 'vmp', 'sound of vinyl', 'udiscover', 'importcds'
+    ];
+    
+    let cleaned = title;
+    // Remove store names in brackets at the start of the title
+    // Match pattern like [Amazon], [Bandcamp], [Rough Trade], etc.
+    // Escape special regex characters and handle spaces
+    const escapedStoreNames = storeNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+'));
+    const storePattern = new RegExp(`^\\[(${escapedStoreNames.join('|')})\\]\\s*`, 'i');
+    cleaned = cleaned.replace(storePattern, '').trim();
+
     // Step 1: Clean common prefixes and noise
-    let cleaned = title
+    cleaned = cleaned
       // Remove common prefixes
       .replace(/^\[?\s*(pre-?order|preorder|new release|restock|reissue|restocked?|available now)\s*:?\s*\]?\s*/gi, '')
       .replace(/^(pre\s*-?\s*order\s*:?\s*)/gi, '')
@@ -320,6 +344,28 @@ class RedditVinylScraper {
 
   async saveRelease(release) {
     try {
+      // First, try to update by source_id if it exists (handles cases where parsing changed)
+      if (release.source_id) {
+        const updateBySourceId = await query(
+          `UPDATE releases 
+           SET artist = $1, album = $2, reddit_score = $3, num_comments = $4,
+               cover_url = COALESCE($5, cover_url), purchase_url = COALESCE($6, purchase_url),
+               subreddit = COALESCE($7, subreddit), updated_at = NOW()
+           WHERE source_id = $8 AND source = $9
+           RETURNING id`,
+          [
+            release.artist, release.album, release.reddit_score, release.num_comments,
+            release.cover_url, release.purchase_url, release.subreddit,
+            release.source_id, release.source
+          ]
+        );
+
+        if (updateBySourceId.rows.length > 0) {
+          return 'updated';
+        }
+      }
+
+      // If no match by source_id, try the standard insert/update
       const sql = `
         INSERT INTO releases (
           artist, album, label, release_date, preorder_date, genres, formats,

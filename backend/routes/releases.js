@@ -12,7 +12,8 @@ router.get('/', async (req, res) => {
       limit = 200, 
       offset = 0,
       search,
-      subreddit
+      subreddit,
+      exclude_subreddit
     } = req.query;
 
     // Build WHERE conditions
@@ -30,7 +31,18 @@ router.get('/', async (req, res) => {
         whereConditions.push(`subreddit = $${paramCount}`);
         params.push('VGMvinyl');
         paramCount++;
+      } else if (subreddit === 'deals' || subreddit === 'vinyldeals') {
+        whereConditions.push(`subreddit = $${paramCount}`);
+        params.push('vinyldeals');
+        paramCount++;
       }
+    }
+
+    // Exclude subreddit (for filtering out deals from main page)
+    if (exclude_subreddit) {
+      whereConditions.push(`(subreddit IS NULL OR subreddit != $${paramCount})`);
+      params.push(exclude_subreddit);
+      paramCount++;
     }
 
     // Filter by genre

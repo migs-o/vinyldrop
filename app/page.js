@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Calendar, Disc, Filter, Mail, ExternalLink } from 'lucide-react';
+import { Search, Calendar, Disc, Filter, Mail, ExternalLink, Tag } from 'lucide-react';
+import Link from 'next/link';
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -24,7 +25,14 @@ export default function VinylTracker() {
   const fetchReleases = async () => {
     try {
       setLoading(true);
-      const subredditParam = subredditFilter === 'all' ? '' : `&subreddit=${subredditFilter}`;
+      // Exclude vinyldeals from main releases page unless explicitly filtering
+      let subredditParam = '';
+      if (subredditFilter === 'all') {
+        // When showing "all", exclude deals by filtering for non-deals subreddits
+        subredditParam = '&exclude_subreddit=vinyldeals';
+      } else if (subredditFilter !== 'all') {
+        subredditParam = `&subreddit=${subredditFilter}`;
+      }
       const response = await fetch(`${API_BASE_URL}/api/releases?limit=200${subredditParam}`);
       
       if (!response.ok) {
@@ -92,9 +100,18 @@ export default function VinylTracker() {
       {/* Header */}
       <header className="bg-black/30 backdrop-blur-sm border-b border-purple-500/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Disc className="w-8 h-8 text-purple-400" />
-            <h1 className="text-2xl font-bold text-white">VinylDrop</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Disc className="w-8 h-8 text-purple-400" />
+              <h1 className="text-2xl font-bold text-white">VinylDrop</h1>
+            </div>
+            <Link
+              href="/deals"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition text-white text-sm"
+            >
+              <Tag className="w-4 h-4" />
+              Deals
+            </Link>
           </div>
         </div>
       </header>
