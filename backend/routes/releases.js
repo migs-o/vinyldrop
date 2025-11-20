@@ -9,42 +9,65 @@ router.get('/', async (req, res) => {
       genre, 
       format, 
       sort = 'date', 
-      limit = 50, 
+      limit = 200, 
       offset = 0,
-      search 
+      search,
+      subreddit
     } = req.query;
 
-    let sql = 'SELECT * FROM releases WHERE 1=1';
+    // Build WHERE conditions
+    let whereConditions = [];
     const params = [];
     let paramCount = 1;
 
+    // Filter by subreddit
+    if (subreddit && subreddit !== 'all') {
+      if (subreddit === 'music') {
+        whereConditions.push(`(subreddit = $${paramCount} OR subreddit IS NULL)`);
+        params.push('VinylReleases');
+        paramCount++;
+      } else if (subreddit === 'vgm' || subreddit === 'video-game-music') {
+        whereConditions.push(`subreddit = $${paramCount}`);
+        params.push('VGMvinyl');
+        paramCount++;
+      }
+    }
+
     // Filter by genre
     if (genre && genre !== 'all') {
-      sql += ` AND $${paramCount} = ANY(genres)`;
+      whereConditions.push(`$${paramCount} = ANY(genres)`);
       params.push(genre);
       paramCount++;
     }
 
     // Filter by format
     if (format && format !== 'all') {
-      sql += ` AND EXISTS (
+      whereConditions.push(`EXISTS (
         SELECT 1 FROM unnest(formats) f 
         WHERE f ILIKE $${paramCount}
-      )`;
+      )`);
       params.push(`%${format}%`);
       paramCount++;
     }
 
     // Search
     if (search) {
-      sql += ` AND (
+      whereConditions.push(`(
         artist ILIKE $${paramCount} OR 
         album ILIKE $${paramCount + 1} OR
         label ILIKE $${paramCount + 2}
-      )`;
+      )`);
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
       paramCount += 3;
     }
+
+    // Build WHERE clause
+    const whereClause = whereConditions.length > 0 
+      ? `WHERE ${whereConditions.join(' AND ')}`
+      : '';
+
+    // Build main query
+    let sql = `SELECT * FROM releases ${whereClause}`;
 
     // Sorting
     switch (sort) {
@@ -67,8 +90,8 @@ router.get('/', async (req, res) => {
 
     const result = await query(sql, params);
 
-    // Get total count
-    let countSql = 'SELECT COUNT(*) FROM releases WHERE 1=1';
+    // Get total count with same WHERE conditions
+    const countSql = `SELECT COUNT(*) FROM releases ${whereClause}`;
     const countParams = params.slice(0, -2); // Remove limit/offset
     const countResult = await query(countSql, countParams);
 

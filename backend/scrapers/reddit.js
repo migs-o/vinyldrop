@@ -7,10 +7,46 @@ class RedditVinylScraper {
   }
 
   async scrapeAndStore(limit = 100) {
-    try {
-      console.log('🎵 Starting Reddit scraper...');
+    // Scrape both subreddits
+    const results = await this.scrapeAllSubreddits();
+    return results;
+  }
 
-      const url = `https://www.reddit.com/r/${this.subreddit}/new.json?limit=${limit}`;
+  async scrapeAllSubreddits() {
+    try {
+      console.log('🎵 Starting Reddit scraper for all subreddits...');
+      
+      let totalInserted = 0;
+      let totalUpdated = 0;
+      let totalProcessed = 0;
+
+      // Scrape r/VinylReleases - 150 posts, all posts
+      console.log('📀 Scraping r/VinylReleases (150 posts)...');
+      const vinylResults = await this.scrapeSubreddit('VinylReleases', 150, null);
+      totalInserted += vinylResults.inserted;
+      totalUpdated += vinylResults.updated;
+      totalProcessed += vinylResults.total;
+
+      // Scrape r/VGMvinyl - 50 posts, only with specific flairs
+      console.log('🎮 Scraping r/VGMvinyl (50 posts, filtered by flairs)...');
+      const vgmFlairs = ['New Release', 'Pre-Order', 'Back in Stock'];
+      const vgmResults = await this.scrapeSubreddit('VGMvinyl', 50, vgmFlairs);
+      totalInserted += vgmResults.inserted;
+      totalUpdated += vgmResults.updated;
+      totalProcessed += vgmResults.total;
+
+      console.log(`✅ Scraping complete: ${totalInserted} new, ${totalUpdated} updated, ${totalProcessed} total`);
+      return { inserted: totalInserted, updated: totalUpdated, total: totalProcessed };
+
+    } catch (error) {
+      console.error('❌ Scraping error:', error.message);
+      throw error;
+    }
+  }
+
+  async scrapeSubreddit(subreddit, limit, allowedFlairs = null) {
+    try {
+      const url = `https://www.reddit.com/r/${subreddit}/new.json?limit=${limit}`;
       const response = await axios.get(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -26,26 +62,35 @@ class RedditVinylScraper {
       const posts = response.data.data.children;
       let inserted = 0;
       let updated = 0;
+      let processed = 0;
 
       for (const post of posts) {
-        const release = this.parsePost(post.data);
+        // Filter by flairs if specified
+        if (allowedFlairs && allowedFlairs.length > 0) {
+          const postFlair = post.data.link_flair_text;
+          if (!postFlair || !allowedFlairs.includes(postFlair)) {
+            continue; // Skip posts without matching flairs
+          }
+        }
+
+        const release = this.parsePost(post.data, subreddit);
         if (release) {
           const result = await this.saveRelease(release);
           if (result === 'inserted') inserted++;
           if (result === 'updated') updated++;
+          processed++;
         }
       }
 
-      console.log(`✅ Scraping complete: ${inserted} new, ${updated} updated`);
-      return { inserted, updated, total: posts.length };
+      return { inserted, updated, total: processed };
 
     } catch (error) {
-      console.error('❌ Scraping error:', error.message);
+      console.error(`❌ Error scraping r/${subreddit}:`, error.message);
       throw error;
     }
   }
 
-  parsePost(post) {
+  parsePost(post, subreddit) {
     const title = post.title;
     const parsed = this.parseTitleInfo(title);
 
@@ -64,6 +109,7 @@ class RedditVinylScraper {
       source: 'reddit',
       source_id: post.id,
       source_url: `https://www.reddit.com${post.permalink}`,
+      subreddit: subreddit,
       reddit_score: post.score,
       num_comments: post.num_comments,
       posted_at: new Date(post.created_utc * 1000).toISOString()
@@ -277,14 +323,15 @@ class RedditVinylScraper {
         INSERT INTO releases (
           artist, album, label, release_date, preorder_date, genres, formats,
           price, cover_url, purchase_url, description, source, source_id,
-          source_url, reddit_score, num_comments, posted_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+          source_url, subreddit, reddit_score, num_comments, posted_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         ON CONFLICT (artist, album, source) 
         DO UPDATE SET
           reddit_score = EXCLUDED.reddit_score,
           num_comments = EXCLUDED.num_comments,
           cover_url = COALESCE(EXCLUDED.cover_url, releases.cover_url),
           purchase_url = COALESCE(EXCLUDED.purchase_url, releases.purchase_url),
+          subreddit = COALESCE(EXCLUDED.subreddit, releases.subreddit),
           updated_at = NOW()
         RETURNING id, (xmax = 0) AS inserted
       `;
@@ -294,7 +341,7 @@ class RedditVinylScraper {
         release.preorder_date, release.genres, release.formats, release.price,
         release.cover_url, release.purchase_url, release.description,
         release.source, release.source_id, release.source_url,
-        release.reddit_score, release.num_comments, release.posted_at
+        release.subreddit, release.reddit_score, release.num_comments, release.posted_at
       ];
 
       const result = await query(sql, values);
@@ -310,7 +357,7 @@ class RedditVinylScraper {
 // Run scraper if called directly
 if (require.main === module) {
   const scraper = new RedditVinylScraper();
-  scraper.scrapeAndStore(100)
+  scraper.scrapeAndStore()
     .then(() => process.exit(0))
     .catch(err => {
       console.error(err);

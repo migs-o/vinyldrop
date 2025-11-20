@@ -27,7 +27,7 @@ app.get('/health', (req, res) => {
 app.post('/api/scrape', async (req, res) => {
   try {
     const scraper = new RedditScraper();
-    const result = await scraper.scrapeAndStore(100);
+    const result = await scraper.scrapeAndStore();
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -39,7 +39,7 @@ cron.schedule('0 */6 * * *', async () => {
   console.log('⏰ Running scheduled scrape...');
   try {
     const scraper = new RedditScraper();
-    await scraper.scrapeAndStore(100);
+    await scraper.scrapeAndStore();
   } catch (error) {
     console.error('Scheduled scrape failed:', error);
   }

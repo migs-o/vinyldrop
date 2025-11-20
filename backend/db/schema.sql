@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS releases (
   source VARCHAR(50) NOT NULL, -- 'reddit', 'discogs', 'bandcamp'
   source_id VARCHAR(255), -- External ID from source
   source_url TEXT, -- Link to source post/page
+  subreddit VARCHAR(100), -- 'VinylReleases' or 'VGMvinyl'
   reddit_score INTEGER,
   num_comments INTEGER,
   posted_at TIMESTAMP,
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS releases (
 CREATE INDEX idx_releases_artist ON releases(artist);
 CREATE INDEX idx_releases_release_date ON releases(release_date);
 CREATE INDEX idx_releases_source ON releases(source);
+CREATE INDEX idx_releases_subreddit ON releases(subreddit);
 CREATE INDEX idx_releases_genres ON releases USING GIN(genres);
 CREATE INDEX idx_releases_scraped_at ON releases(scraped_at DESC);
 
