@@ -221,11 +221,23 @@ export default function VinylTracker() {
             {filteredReleases.map(release => {
               const days = daysUntilRelease(release.release_date);
               const isComingSoon = days !== null && days > 0;
+              const cardLink = release.purchase_url || release.source_url;
+              
+              const handleCardClick = (e) => {
+                // Don't navigate if clicking on buttons
+                if (e.target.closest('a')) {
+                  return;
+                }
+                if (cardLink) {
+                  window.open(cardLink, '_blank', 'noopener,noreferrer');
+                }
+              };
               
               return (
                 <div
                   key={release.id}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden border border-purple-500/20 hover:border-purple-400/50 transition group"
+                  onClick={handleCardClick}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden border border-purple-500/20 hover:border-purple-400/50 hover:bg-white/10 transition group cursor-pointer"
                 >
                   {/* Cover Image */}
                   <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-purple-900/20 to-pink-900/20">
@@ -308,7 +320,8 @@ export default function VinylTracker() {
                           href={release.purchase_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 text-xs rounded transition bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 text-xs rounded transition bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-1 z-10 relative"
                         >
                           Buy <ExternalLink className="w-3 h-3" />
                         </a>
@@ -318,7 +331,8 @@ export default function VinylTracker() {
                           href={release.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 text-xs rounded transition bg-white/10 hover:bg-white/20 text-white flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 text-xs rounded transition bg-white/10 hover:bg-white/20 text-white flex items-center gap-1 z-10 relative"
                         >
                           Reddit <ExternalLink className="w-3 h-3" />
                         </a>

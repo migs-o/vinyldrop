@@ -174,10 +174,23 @@ export default function VinylDeals() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredDeals.map(deal => {
+              const cardLink = deal.purchase_url || deal.source_url;
+              
+              const handleCardClick = (e) => {
+                // Don't navigate if clicking on buttons
+                if (e.target.closest('a')) {
+                  return;
+                }
+                if (cardLink) {
+                  window.open(cardLink, '_blank', 'noopener,noreferrer');
+                }
+              };
+              
               return (
                 <div
                   key={deal.id}
-                  className="bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden border border-orange-500/20 hover:border-orange-400/50 transition group"
+                  onClick={handleCardClick}
+                  className="bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden border border-orange-500/20 hover:border-orange-400/50 hover:bg-white/10 transition group cursor-pointer"
                 >
                   {/* Cover Image */}
                   <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-orange-900/20 to-red-900/20">
@@ -260,7 +273,8 @@ export default function VinylDeals() {
                           href={deal.purchase_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 text-xs rounded transition bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 text-xs rounded transition bg-orange-600 hover:bg-orange-700 text-white flex items-center gap-1 z-10 relative"
                         >
                           Buy <ExternalLink className="w-3 h-3" />
                         </a>
@@ -270,7 +284,8 @@ export default function VinylDeals() {
                           href={deal.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 text-xs rounded transition bg-white/10 hover:bg-white/20 text-white flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 text-xs rounded transition bg-white/10 hover:bg-white/20 text-white flex items-center gap-1 z-10 relative"
                         >
                           Reddit <ExternalLink className="w-3 h-3" />
                         </a>
