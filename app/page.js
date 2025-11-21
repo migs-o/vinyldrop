@@ -71,12 +71,32 @@ export default function VinylTracker() {
     return filtered;
   }, [releases, searchTerm, sortBy]);
 
-  const handleEmailSubmit = () => {
-    if (email && email.includes('@')) {
-      alert(`Thanks! We'll notify ${email} about new releases.`);
-      setEmail('');
-    } else {
+  const handleEmailSubmit = async () => {
+    if (!email || !email.includes('@')) {
       alert('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/subscriptions/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(data.message || 'Thanks! Please check your email to confirm your subscription.');
+        setEmail('');
+      } else {
+        alert(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error subscribing:', err);
+      alert('Failed to subscribe. Please try again later.');
     }
   };
 

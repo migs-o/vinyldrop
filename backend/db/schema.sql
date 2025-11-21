@@ -66,3 +66,17 @@ INSERT INTO stores (name, domain) VALUES
   ('Discogs', 'discogs.com'),
   ('Turntable Lab', 'turntablelab.com')
 ON CONFLICT (domain) DO NOTHING;
+
+-- Create subscribers table for email subscriptions
+CREATE TABLE IF NOT EXISTS subscribers (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  verified BOOLEAN DEFAULT false,
+  subscribed_at TIMESTAMP DEFAULT NOW(),
+  unsubscribed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create indexes for subscribers
+CREATE INDEX idx_subscribers_email ON subscribers(email);
+CREATE INDEX idx_subscribers_verified ON subscribers(verified);

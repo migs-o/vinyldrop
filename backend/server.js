@@ -7,6 +7,7 @@ console.log('🔍 DEBUG - PORT from env:', process.env.PORT); // ADD THIS LINE
 console.log('🔍 DEBUG - All env vars:', Object.keys(process.env)); // AND THIS
 
 const releasesRouter = require('./routes/releases');
+const subscriptionsRouter = require('./routes/subscriptions');
 const RedditScraper = require('./scrapers/reddit');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/releases', releasesRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
 
 // Health check
 app.get('/health', (req, res) => {
