@@ -83,6 +83,7 @@ router.get('/unsubscribe', async (req, res) => {
 
     const normalizedEmail = decodeURIComponent(email).toLowerCase().trim();
 
+    // Update database
     const result = await query(
       'UPDATE subscribers SET unsubscribed_at = NOW(), verified = false WHERE email = $1 RETURNING id',
       [normalizedEmail]
@@ -90,6 +91,17 @@ router.get('/unsubscribe', async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Email not found' });
+    }
+
+    // Remove from Resend's audience
+    try {
+      await resend.contacts.remove({
+        email: normalizedEmail
+      });
+      console.log(`✅ Removed ${normalizedEmail} from Resend audience`);
+    } catch (resendError) {
+      console.error('Error removing from Resend audience:', resendError);
+      // Continue even if Resend update fails, as we've already updated our database
     }
 
     res.json({ 
@@ -114,6 +126,7 @@ router.post('/unsubscribe', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Update database
     const result = await query(
       'UPDATE subscribers SET unsubscribed_at = NOW(), verified = false WHERE email = $1 RETURNING id',
       [normalizedEmail]
@@ -121,6 +134,17 @@ router.post('/unsubscribe', async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Email not found' });
+    }
+
+    // Remove from Resend's audience
+    try {
+      await resend.contacts.remove({
+        email: normalizedEmail
+      });
+      console.log(`✅ Removed ${normalizedEmail} from Resend audience`);
+    } catch (resendError) {
+      console.error('Error removing from Resend audience:', resendError);
+      // Continue even if Resend update fails, as we've already updated our database
     }
 
     res.json({ 
