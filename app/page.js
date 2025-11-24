@@ -173,7 +173,7 @@ export default function VinylTracker() {
           Discover Upcoming Vinyl Releases
         </h2>
         <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Track upcoming releases, preorders, and reissues from Reddit's vinyl community. All in one place.
+          Tracks new vinyl releases, preorders, and restocks weekly. All in one place.
         </p>
       </section>
 
@@ -393,7 +393,7 @@ export default function VinylTracker() {
       <footer className="bg-black/30 backdrop-blur-sm border-t border-purple-500/20 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400 text-sm">
           <p className="mb-2">
-            VinylDrop aggregates releases from Reddit's vinyl community.
+            Currently pulling data from Reddit communities, with plans to expand to additional sources.
           </p>
           <p>
             Built for vinyl collectors, by vinyl collectors. 🎵

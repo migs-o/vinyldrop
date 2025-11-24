@@ -202,18 +202,16 @@ async function sendWelcomeEmail(email) {
                 <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto;">
                   <tr>
                     <td>
-                      <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 20px; font-weight: 600;">Welcome!</h2>
+                      <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 24px; font-weight: 600;">Hey there, collector!</h2>
                       <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
-                        Thank you for subscribing to VinylDrop. You will now receive updates about new vinyl releases, preorders, and exclusive deals.
+                        Welcome to VinylDrop! You're now on the list to receive a weekly roundup of the hottest vinyl releases, preorders, and exclusive deals — all in one simple digest.
                       </p>
                       <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
-                        We track releases from multiple sources:
+                        We carefully track the top drops so you never miss a beat.
                       </p>
-                      <ul style="margin: 0 0 30px 0; padding-left: 20px; color: #666666; font-size: 16px; line-height: 1.8;">
-                        <li>Music releases from r/VinylReleases</li>
-                        <li>Video game music from r/VGMvinyl</li>
-                        <li>Deals and discounts from r/vinyldeals</li>
-                      </ul>
+                      <p style="margin: 0 0 30px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                        Get ready — your inbox is about to become your personal vinyl treasure trove.
+                      </p>
                       <table role="presentation" style="width: 100%; margin: 30px 0;">
                         <tr>
                           <td style="text-align: center;">
@@ -244,21 +242,18 @@ async function sendWelcomeEmail(email) {
       </html>
     `;
 
-    const textContent = `Welcome to VinylDrop!
+    const textContent = `Hey there, collector!
 
-Thank you for subscribing. You will now receive updates about new vinyl releases, preorders, and exclusive deals.
+Welcome to VinylDrop! You're now on the list to receive a weekly roundup of the hottest vinyl releases, preorders, and exclusive deals — all in one simple digest.
 
-We track releases from:
-- Music releases from r/VinylReleases
-- Video game music from r/VGMvinyl
-- Deals and discounts from r/vinyldeals
+We carefully track the top drops so you never miss a beat.
+
+Get ready — your inbox is about to become your personal vinyl treasure trove.
+
+— The VinylDrop Team
 
 Visit us at: ${frontendUrl}
-
-You're receiving this because you subscribed to VinylDrop updates.
-Unsubscribe: ${unsubscribeUrl}
-
-VinylDrop - Your source for vinyl releases and deals`;
+Unsubscribe: ${unsubscribeUrl}`;
 
     // Add to Resend's audience first
     try {
@@ -280,7 +275,7 @@ VinylDrop - Your source for vinyl releases and deals`;
         from: `${fromName} <${fromEmail}>`,
         to: email,
         replyTo: process.env.RESEND_REPLY_TO || fromEmail,
-        subject: 'Welcome to VinylDrop!',
+        subject: 'Your Weekly Vinyl Digest Awaits',
         html: htmlContent,
         text: textContent,
         headers: {
