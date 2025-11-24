@@ -4,6 +4,7 @@ const { query } = require('../db/database');
 const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const audienceId = process.env.RESEND_AUDIENCE_ID;
 
 // POST /api/subscriptions/subscribe - Subscribe email
 router.post('/subscribe', async (req, res) => {
@@ -173,6 +174,10 @@ async function sendWelcomeEmail(email) {
     if (fromEmail.includes('resend.dev') || fromEmail.includes('onboarding@')) {
       throw new Error('Cannot use Resend test domain. Please set RESEND_FROM_EMAIL to an email from your verified domain (e.g., noreply@yourdomain.com)');
     }
+
+    if (!audienceId) {
+      throw new Error('RESEND_AUDIENCE_ID environment variable is required. Please create an audience in Resend and provide its ID.');
+    }
     
     // Generate unsubscribe URL with email parameter
     const unsubscribeUrl = `${frontendUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
@@ -258,8 +263,9 @@ VinylDrop - Your source for vinyl releases and deals`;
     // Add to Resend's audience first
     try {
       await resend.contacts.create({
-        email: email,
-        first_name: email.split('@')[0], // Use the part before @ as first name
+        email,
+        audienceId,
+        firstName: email.split('@')[0],
         unsubscribed: false
       });
       console.log(`✅ Added ${email} to Resend audience`);
