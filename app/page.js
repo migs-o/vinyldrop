@@ -136,35 +136,45 @@ export default function VinylTracker() {
         </div>
       </header>
 
+      {/* Notify Me Section - Prominent Bar */}
+      <div className="bg-gradient-to-r from-purple-600/80 to-purple-700/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl font-bold text-white mb-1">Get the Weekly Roundup</h2>
+              <p className="text-purple-100">All the week’s top drops in one email. No spam.</p>
+            </div>
+            <div className="flex w-full md:w-auto gap-2">
+              <div className="flex-1 relative max-w-md">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
+                  placeholder="Your email address"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+              </div>
+              <button
+                onClick={handleEmailSubmit}
+                className="whitespace-nowrap px-6 py-3 bg-white text-purple-700 hover:bg-purple-50 font-medium rounded-lg transition shadow-lg hover:shadow-purple-500/30"
+              >
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 py-12 text-center">
+      <section className="max-w-7xl mx-auto px-4 pt-16 pb-12 text-center">
         <h2 className="text-5xl font-bold text-white mb-4">
-          Never Miss a Vinyl Drop
+          Discover Upcoming Vinyl Releases
         </h2>
         <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
           Track upcoming releases, preorders, and reissues from Reddit's vinyl community. All in one place.
         </p>
-        
-        {/* Email Signup */}
-        <div className="max-w-md mx-auto flex gap-2">
-          <div className="flex-1 relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
-              placeholder="Enter your email for updates"
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/10 border border-purple-500/30 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400"
-            />
-          </div>
-          <button
-            onClick={handleEmailSubmit}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition"
-          >
-            Notify Me
-          </button>
-        </div>
       </section>
 
       {/* Search and Sort */}
