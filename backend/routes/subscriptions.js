@@ -255,27 +255,45 @@ Unsubscribe: ${unsubscribeUrl}
 
 VinylDrop - Your source for vinyl releases and deals`;
 
-    await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: email,
-      replyTo: process.env.RESEND_REPLY_TO || fromEmail,
-      subject: 'Welcome to VinylDrop',
-      html: htmlContent,
-      text: textContent,
-      headers: {
-        'X-Entity-Ref-ID': 'welcome-email',
-        'List-Unsubscribe': `<${unsubscribeUrl}>`,
-        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-        'Precedence': 'bulk',
-        'X-Auto-Response-Suppress': 'All',
-      },
-    });
-    
-    console.log(`✅ Welcome email sent to ${email}`);
+    // Add to Resend's audience first
+    try {
+      await resend.contacts.create({
+        email: email,
+        first_name: email.split('@')[0], // Use the part before @ as first name
+        unsubscribed: false
+      });
+      console.log(`✅ Added ${email} to Resend audience`);
+    } catch (resendError) {
+      console.error('Error adding to Resend audience:', resendError);
+      // Continue with sending the email even if adding to audience fails
+    }
+
+    // Send welcome email
+    try {
+      await resend.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: email,
+        replyTo: process.env.RESEND_REPLY_TO || fromEmail,
+        subject: 'Welcome to VinylDrop!',
+        html: htmlContent,
+        text: textContent,
+        headers: {
+          'X-Entity-Ref-ID': 'welcome-email',
+          'List-Unsubscribe': `<${unsubscribeUrl}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'Precedence': 'bulk',
+          'X-Auto-Response-Suppress': 'All',
+        },
+      });
+      console.log(`✅ Welcome email sent to ${email}`);
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      // Don't throw - we don't want to fail the subscription if email fails
+      // The email is stored in DB, we can retry later if needed
+    }
   } catch (error) {
-    console.error('Error sending welcome email:', error);
-    // Don't throw - we don't want to fail the subscription if email fails
-    // The email is stored in DB, we can retry later if needed
+    console.error('Unexpected error in sendWelcomeEmail:', error);
+    throw error;
   }
 }
 
